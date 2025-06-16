@@ -1,0 +1,16 @@
+If package already installed ask the user if they want to log that to the DB.
+Addin labels.
+
+command install
+command remove
+command list labels, package
+search - labels, package
+rename labels
+
+commands:
+
+install
+remove
+list [--all] [--labels]
+search [--labels] [--package]
+edit

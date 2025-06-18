@@ -14,3 +14,5 @@ remove
 list [--all] [--labels]
 search [--labels] [--package]
 edit
+
+is_package_installed () update to work with all the pkg managers

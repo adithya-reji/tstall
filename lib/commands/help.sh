@@ -1,24 +1,24 @@
 help () {
-    local PROGRAM_NAME="tstall"
     cat << EOF
 $PROGRAM_NAME - [Short description of your tool]
 
 Usage: $PROGRAM_NAME [options] <command>
 
 Basic commands:
-  install           install packages.
-  remove            remove packages.
-  list              list all installed packages.
-  list-labels       list all labels.
-  search            search installed package.
-  search-labels     search labels.
-  edit              Edit an installed package data.
-  edit-label        Edit a label.
+  install                 install packages.
+  remove                  remove packages.
+  remove-label            remove all packages with the label.
+  list                    list all installed packages data.
+  list-labels             list all labels.
+  search                  search an installed package.
+  search-labels           search all packages with the labels.
+  edit-package-label      edit an installed package label.
+  rename-label            rename a label.
 
 
 Options:
-  -h, --help, help  Show this help message.
-  -v, --version     Show version info.
+  -h, --help, help        show this help message.
+  -v, --version           show version info.
 
 Examples:
   $PROGRAM_NAME install [package...]
@@ -52,8 +52,14 @@ help_command () {
     search-label)
       help_search_label
       ;;
+    edit-package-label)
+      help_edit_package_label
+      ;;
+    rename-label)
+      help_edit_label
+      ;;
     *)
-      echo "Error: unknown command, type '$PROGRAM_NAME help' for help."
+      echo "\033[0;31mError: unknown command, type '$PROGRAM_NAME help' for help.\033[0m"
 
   esac
 }
@@ -64,7 +70,7 @@ Usage:
   $PROGRAM_NAME install <package>...
   $PROGRAM_NAME install <package manager> <package>...
 
-The install command is used to install packages from the available package manager on the system.
+The install command is used to install <package> from the available package manager on the system.
 EOF
 }
 
@@ -73,16 +79,16 @@ help_remove_package () {
 Usage: 
   $PROGRAM_NAME remove <package>...
 
-The remove command helps to remove/uninstall packages installed with tstall.
+The remove command helps to remove/uninstall <package> installed with tstall.
 EOF
 }
 
 help_remove_label () {
   cat << EOF
 Usage: 
-  $PROGRAM_NAME remove-label <label>...
+  $PROGRAM_NAME remove-label <label>
 
-The remove-label command helps to remove/uninstall all the packages with the specified labels.
+The remove-label command helps to remove/uninstall all the packages with the specified <label>.
 EOF
 }
 
@@ -91,7 +97,7 @@ help_list () {
 Usage: 
   $PROGRAM_NAME list
 
-The list command lists all the installed packages with tstall.
+The list command lists all the installed packages data with tstall.
 EOF
 }
 
@@ -109,7 +115,7 @@ help_search_package () {
 Usage: 
   $PROGRAM_NAME search <package>
 
-The search command is used to search for a package.
+The search command is used to search for the <package>.
 EOF
 }
 
@@ -118,6 +124,24 @@ help_search_label () {
 Usage: 
   $PROGRAM_NAME search-label <label>
 
-The search-label command helps to find all the packages that has the specified label.
+The search-label command helps to find all the packages that has the specified <label>.
+EOF
+}
+
+help_edit_package_label () {
+  cat << EOF
+Usage:
+  $PROGRAM_NAME edit-package-label <package> <label>
+
+The edit-package-label command is used to edit the label of the specified <package> and replaces it with the <label>.
+EOF
+}
+
+help_rename_label () {
+  cat << EOF
+Usage:
+  $PROGRAM_NAME rename-label <label> <new label>
+
+The rename-label command is used to rename the specified <label> with the <new label>.
 EOF
 }

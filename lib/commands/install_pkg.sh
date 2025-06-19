@@ -15,19 +15,24 @@ detect_available_pm () {
 available_managers=($(detect_available_pm))
 
 get_pkg_install_labels () {
-    local -a labels
-    mapfile -t labels < <(sqlite3 "$DB_FILE" "SELECT DISTINCT label FROM installed_packages WHERE label IS NOT NULL;")
-    echo "${labels[@]}"
+    sqlite3 "$DB_FILE" "SELECT DISTINCT label FROM installed_packages WHERE label IS NOT NULL;"
 }
 
 select_pkg_install_label () {
     local labels=("$@")
-    select label in "${labels[@]}" "$(tput bold)$(tput setaf 6)Add new label$(tput sgr0)"; do
+    labels+=("$(tput bold)$(tput setaf 6)Add new label$(tput sgr0)")
+
+    PS3="Choose an option: "
+    select label in "${labels[@]}"; do
         if [[ -n "$label" ]]; then
-            echo "$label"
-            return
+            if [[ "$label" == "$(tput bold)$(tput setaf 6)Add new label$(tput sgr0)" ]]; then
+                echo "__custom__"
+            else
+                echo "$label"
+            fi
+            return 0
         else
-            echo ""
+            echo "Invalid choice." >&2
         fi 
     done
 }
@@ -53,7 +58,7 @@ try_install_package () {
     local pkg_manager="$1"
     local pkg="$2"
     local success=false
-    local existing_labels
+    local -a existing_labels
     local selected_label
     local pkg_version
     local pkg_label
@@ -89,9 +94,6 @@ try_install_package () {
             ;;
         "snap")
             echo -e "\033[1mAttempting installation of $pkg using snap\033[0m"
-            # if sudo snap install "$pkg" > >(tee "$log_file") 2> >(tee -a "$log_file" >&2); then
-            #     success=true
-            # fi
             success=true
             ;;
     esac
@@ -100,34 +102,37 @@ try_install_package () {
         echo -e "\033[0;32mSuccessfully installed $pkg using $pkg_manager\033[0m"
         read -p "Do you want to add a label? [Y/n] " pkg_label
         pkg_label="${pkg_label,,}"
+
         if [[ -z "$pkg_label" ]] || [[ "$pkg_label" != "n" ]] ; then
             pkg_label="y"
         fi
 
         if [[ "$pkg_label" == "y" ]]; then
-            existing_labels=($(get_pkg_install_labels))
+            readarray -t existing_labels < <(get_pkg_install_labels) 
+            # existing_labels=($(get_pkg_install_labels))
 
-            if [[ -z "${existing_labels[@]}" ]]; then
+            if (( ${#existing_labels[@]} == 0 )); then
                 read -p "Enter new label: " selected_label
             else
                 selected_label=$(select_pkg_install_label "${existing_labels[@]}")
-                if [[ "$selected_label" == "$(tput bold)$(tput setaf 6)Add new label$(tput sgr0)" ]]; then
+                if [[ "$selected_label" == "__custom__" ]]; then
                     read -p "Enter new label: " selected_label
                 fi
             fi
         fi
+
         pkg_version=$(get_pkg_install_version "$pkg")
         update_install_to_db "$pkg_manager" "$pkg" "$pkg_version" "$selected_label"
         return 0
     else
-        echo -e "\033[0;31mFailed to install $pkg using $pkg_manager\033[0m"
+        echo -e "\033[0;31mFailed to install $pkg using $pkg_manager\033[0m" >&2
         return 1
     fi
 }
 
 get_multi_pkg_install_managers () {
-    local -A pkg_managers
     local packages=("$@")
+    local -A pkg_managers
     local selected_manager
     local failed_pkgs=()
 
@@ -137,16 +142,17 @@ get_multi_pkg_install_managers () {
         if [[ -n "$selected_manager" ]]; then
             pkg_managers["$pkg"]="$selected_manager"
         else
-            echo "Invalid package manager."
+            echo "Invalid package manager." >&2
         fi
     done
+
     for pkg in "${packages[@]}"; do
         if ! try_install_package "${pkg_managers[$pkg]}" "$pkg"; then
             failed_pkgs+=("$pkg")
         fi
     done
 
-    echo "${failed_pkgs[@]}"
+    printf '%s\n' "${failed_pkgs[@]}"
 }
 
 select_install_package_manager () {
@@ -160,16 +166,17 @@ select_install_package_manager () {
         echo ""
         return
     else
-        if [[ "${#available_managers[@]}" -eq 1 ]]; then
+        if (( ${#available_managers[@]} == 1 )); then
             echo "${available_managers[0]}"
             return 0
-        elif [[ "${#available_managers[@]}" -gt 1 ]]; then
+        elif (( ${#available_managers[@]} > 1 )); then
+            PS3="Choose a package manager: "
             select pkg_manager in "${available_managers[@]}"; do
                 if [[ -n "$pkg_manager" ]]; then
                     echo "$pkg_manager"
                     return 0
                 else
-                    echo "Invalid choice. Please try again." >&2
+                    echo "Invalid choice. Please choose a valid package manager." >&2
                 fi
             done
         fi
@@ -191,8 +198,8 @@ install_package () {
     local selected_manager
     local failed_pkgs=()
 
-    if [[ -z "${available_managers[@]}" ]]; then
-        echo -e "\033[0;31mError: No package manager available.\033[0m"
+    if (( ${#available_managers[@]} == 0 )); then
+        echo -e "\033[0;31mError: No package manager available.\033[0m" >&2
         return 1
     fi
 
@@ -216,6 +223,7 @@ install_package () {
         fi
     done
 
+    # Checks if user choice package manager exist
     if $user_choice_pm; then
         for pkg in "${pkg_to_install[@]}"; do
             if ! try_install_package "$selected_manager" "$pkg"; then
@@ -223,14 +231,14 @@ install_package () {
             fi
         done
     else
-        if [[ "${#pkg_to_install[@]}" -gt 1 ]]; then
-            # Selects package manager for multiple pkg installation
-            echo "Choose an option: "
+        # Checks if package to install is greater than 1
+        if (( ${#pkg_to_install[@]} > 1 )); then
+            PS3="Choose an option: "
             select option in "Install from a single package manager." "Install from multiple package managers."
             do
                 case $option in
                     "Install from a single package manager.")
-                        echo -e "Select a package manager to install \033[1m${pkg_to_install[@]}\033[0m: "
+                        echo -e "Choose a package manager to install \033[1m${pkg_to_install[@]}\033[0m: "
                         selected_manager=$(select_install_package_manager)
                         for pkg in "${pkg_to_install[@]}"; do
                             if ! try_install_package "$selected_manager" "$pkg"; then
@@ -240,16 +248,16 @@ install_package () {
                         break
                         ;;
                     "Install from multiple package managers.")
-                        failed_pkgs=($(get_multi_pkg_install_managers "${pkg_to_install[@]}"))
+                        readarray -t failed_pkgs < <(get_multi_pkg_install_managers "${pkg_to_install[@]}")
                         break
                         ;;
                     *)
-                        echo "Invalid option."
+                        echo "Invalid choice. Please choose an installation method." >&2
                         break
                         ;;
                 esac
             done
-        elif [[ "${#pkg_to_install[@]}" -eq 1 ]]; then
+        elif (( ${#pkg_to_install[@]} == 1 )); then
             echo -e "Select a package manager to install \033[1m${pkg_to_install[@]}\033[0m:"
             selected_manager=$(select_install_package_manager)
             if [[ -n "$selected_manager" ]]; then
@@ -257,12 +265,12 @@ install_package () {
                     failed_pkgs+=("${pkg_to_install[0]}")
                 fi
             else
-                echo "Invalid package manager."
+                echo "Invalid package manager." >&2
             fi
         fi
     fi
 
-    if [[ -z "${failed_pkgs[@]}" ]]; then
-        echo -e "\033[0;31mFailed to install:\033[1m ${failed_pkgs[*]} \033[0m"
+    if (( ${#failed_pkgs[@]} > 0 )); then
+        echo -e "\033[0;31mFailed to install:\033[1m ${failed_pkgs[*]} \033[0m" >&2
     fi
 }

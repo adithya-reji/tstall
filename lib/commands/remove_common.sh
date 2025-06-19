@@ -52,7 +52,7 @@ try_remove_package () {
         update_remove_to_db "$pkg"
         return 0
     else
-        echo -e "\033[0;31mFailed to remove $pkg using $pkg_manager.\033[0m"
+        echo -e "\033[0;31mFailed to remove $pkg using $pkg_manager.\033[0m" >&2
         return 1
     fi
 }

@@ -16,3 +16,8 @@ search [--labels] [--package]
 edit
 
 is_package_installed () update to work with all the pkg managers
+
+
+********************************
+make the package install and the db update work seamlessly. The current version does
+not check if the data is updated to db successfully, it just run query silently.

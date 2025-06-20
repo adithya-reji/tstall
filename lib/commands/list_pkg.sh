@@ -15,7 +15,8 @@ list_installed_packages() {
 .headers on
 .mode column
 .width 15 30 15 15 40
-SELECT * FROM installed_packages;
+SELECT * FROM installed_packages
+ORDER BY datetime(installed_at) DESC;
 EOF
 } | LESS='-SR' less
     fi

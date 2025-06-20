@@ -11,6 +11,17 @@ DELETE FROM installed_packages WHERE name='${pkg//\'/''}';
 EOF
 }
 
+is_installed_with_tstall () {
+    local pkg="$1"
+    local count=$(sqlite3 "$DB_FILE" "SELECT COUNT(*) FROM installed_packages WHERE name='${pkg//\'/''}';")
+
+    if (( count == 0 )); then
+        return 1
+    else
+        return 0
+    fi
+}
+
 try_remove_package () {
     local pkg_manager="$1"
     local pkg="$2"

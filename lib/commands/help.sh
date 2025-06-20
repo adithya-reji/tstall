@@ -1,6 +1,9 @@
 help () {
     cat << EOF
-$PROGRAM_NAME - [Short description of your tool]
+$PROGRAM_NAME - Helps you manage packages using labels. Installed packages 
+can be labeled to group them together, enabling management of packages and 
+performing operations such as removal based on labels.
+
 
 Usage: $PROGRAM_NAME [options] <command>
 
@@ -8,10 +11,10 @@ Basic commands:
   install                 install packages.
   remove                  remove packages.
   remove-label            remove all packages with the label.
-  list                    list all installed packages data.
+  list                    list all installed packages.
   list-labels             list all labels.
   search                  search an installed package.
-  search-labels           search all packages with the labels.
+  search-labels           search all packages with the label.
   edit-package-label      edit an installed package label.
   rename-label            rename a label.
 
@@ -21,8 +24,8 @@ Options:
   -v, --version           show version info.
 
 Examples:
-  $PROGRAM_NAME install [package...]
-  $PROGRAM_NAME list
+  $PROGRAM_NAME install <package>...
+  $PROGRAM_NAME edit-package-label <package> <label>
 
 For more information about a command, run '$PROGRAM_NAME help <command>'.
 EOF

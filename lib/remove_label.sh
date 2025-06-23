@@ -14,16 +14,29 @@ remove_label () {
     # packages=($(get_remove_label_packages "$label"))
     readarray -t packages < <(get_remove_label_packages "$label")
 
+    if [[ -z "$packages" ]]; then
+        echo -e "\033[0;31mError: Label '\033[1m$label\033[0m' \033[0;31mnot found.\033[0m"
+        return 1
+    fi
+
+    # for pkg in "${packages[@]}"; do
+    #     if is_package_installed "$pkg"; then
+    #         if is_installed_with_tstall "$pkg"; then
+    #             pkg_to_remove+=("$pkg")
+    #         else
+    #             echo -e "\033[0;36mThe package \033[1m$pkg\033[0m \033[0;36mwas not installed using tstall. Try removing manually.\033[0m"
+    #         fi
+    #     else
+    #         echo -e "\033[0;31mError: \033[1m$pkg\033[0m \033[0;31mnot found.\033[0m"
+    #     fi
+    # done
+
     for pkg in "${packages[@]}"; do
-        if is_package_installed "$pkg"; then
-            if is_installed_with_tstall "$pkg"; then
-                pkg_to_remove+=("$pkg")
-            else
-                echo -e "The package \033[1m$pkg\033[0m was not installed using tstall. Try removing manually."
-            fi
-        else
-            echo -e "\033[1m$pkg\033[0m not found."
+        if ! is_installed_with_tstall "$pkg"; then
+            echo -e "\033[0;36mThe package \033[1m$pkg\033[0m \033[0;36mwas not installed using tstall. Try removing manually.\033[0m"
+            return 1
         fi
+        pkg_to_remove+=("$pkg")
     done
 
     echo "The following packages will be removed: "
@@ -48,6 +61,8 @@ remove_label () {
     fi
 
     if (( ${#failed_pkgs[@]} > 1 )); then
-        echo -e "\033[0;31mFailed to remove: \033[1m ${failed_pkgs[*]} \033[0m" >&2
+        echo -e "\033[0;31mError: Failed to remove: \033[1m ${failed_pkgs[*]} \033[0m" >&2
+    elif (( ${#failed_pkgs[@]} == 0 )); then
+        echo -e "\033[0;32mSuccessfully removed all the packages labeled '$label'.\033[0m"
     fi
 }

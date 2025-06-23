@@ -4,7 +4,7 @@ edit_package_label () {
     local result
 
     if [[ -z "$package" ]] || [[ -z "$label" ]]; then
-        echo "Error: requires both <package> and <label>."
+        echo -e "\033[0;31mError: requires both <package> and <label>.\033[0m"
     fi
 
     result=$(sqlite3 "$DB_FILE" <<EOF
@@ -20,7 +20,7 @@ EOF
         echo "No matching package found or label is already set to '$label'."
         return 1
     else
-        echo "Label updated for $package to '$label'."
+        echo -e "\033[0;32mLabel updated for $package to '$label'.\033[0m"
         return 0
     fi
 }

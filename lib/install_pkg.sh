@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-managers=("apt" "apt-get" "dnf" "yum" "pacman" "opkg" "snap")
+managers=("apt" "apt-get" "dnf" "yum" "pacman" "zypper")
 
 detect_available_pm () {
     local found=()
@@ -32,7 +32,7 @@ select_pkg_install_label () {
             fi
             return 0
         else
-            echo "Invalid choice." >&2
+            echo -e "\033[0;31mError: Invalid choice.\033[0m" >&2
         fi 
     done
 }
@@ -76,45 +76,57 @@ try_install_package () {
     local selected_label
     local pkg_version
     local pkg_label
-    local log_file="/tmp/${pkg}_${pkg_manager}.log"
+    local log_file="$LOG_DIR/install_${pkg}.log"
+    local show_log
 
     case $pkg_manager in
         "apt")
             echo -e "Attempting installation of \033[1m$pkg\033[0m using \033[1mapt\033[0m"
-            # if sudo apt-get update && sudo apt-get install -y "$pkg" > >(tee "$log_file") 2> >(tee -a "$log_file" >&2); then
-            #     success=true
-            # fi
-            success=true
+            if sudo sudo apt update &>>"$log_file" && sudo apt install -y "$pkg" &>>"$log_file"; then
+                success=true
+            fi
             ;;
         "apt-get")
-            echo -e "Attempting installation of \033[1m$pkg-get\033 using \033[1mapt-get\033[0m"
-            success=true
+            echo -e "Attempting installation of \033[1m$pkg\033[0m using \033[1mapt-get\033[0m"
+            if sudo apt-get update &>>"$log_file" && sudo apt-get install -y "$pkg" &>>"$log_file"; then
+                success=true
+            fi
             ;;
         "dnf")
             echo -e "Attempting installation of \033[1m$pkg\033[0m using \033[1mdnf\033[0m"
-            success=true
+            if sudo dnf install -y "$pkg" &>>"$log_file"; then
+                success=true
+            fi
             ;;
         "yum")
             echo -e "Attempting installation of \033[1m$pkg\033[0m using \033[1myum\033[0m"
-            success=true
+            if sudo yum install -y "$pkg" &>>"$log_file"; then
+                success=true
+            fi
             ;;
         "pacman")
             echo -e "Attempting installation of \033[1m$pkg\033[0m using \033[1mpacman\033[0m"
-            success=true
+            if sudo pacman -Sy --noconfirm "$pkg" &>>"$log_file"; then
+                success=true
+            fi
             ;;
-        "opkg")
-            echo -e "Attempting installation of \033[1m$pkg\033[0m using \033[1mopkg\033[0m"
-            success=true
+        "zypper")
+            echo -e "Attempting installation of \033[1m$pkg\033[0m using \033[1mzypper\033[0m"
+            if sudo zypper install -y "$pkg" &>>"$log_file"; then
+                success=true
+            fi
             ;;
-        "snap")
-            echo -e "Attempting installation of \033[1m$pkg\033[0m using \033[1msnap\033[0m"
-            success=true
+        *)
+            echo -e "\033[0;31mError: Unsupported package manager $pkg_manager\033[0m"
+            return 1
             ;;
     esac
 
     if $success; then
         echo -e "\033[0;32mSuccessfully installed $pkg using $pkg_manager\033[0m"
-        read -p "Do you want to add a label? [Y/n] " pkg_label
+
+        # Update the install to the db
+        read -p "Do you want to add a label? [Y/n]: " pkg_label
         pkg_label="${pkg_label,,}"
 
         if [[ -z "$pkg_label" ]] || [[ "$pkg_label" != "n" ]] ; then
@@ -136,9 +148,25 @@ try_install_package () {
 
         pkg_version=$(get_pkg_install_version "$pkg")
         update_install_to_db "$pkg_manager" "$pkg" "$pkg_version" "$selected_label"
+
+        # Show log
+        read -p "Do you want to view the log? [y/N]: " show_log
+        show_log="${show_log,,}"
+
+        if [[ -z "$show_log" ]] || [[ "$show_log" != "y" ]]; then
+            show_log="n"
+        fi
+        
+        if [[ "$show_log" == "y" ]] ; then
+            less "$log_file" || cat "$log_file"
+        fi
+        rm -f "$log_file"
+
         return 0
     else
-        echo -e "\033[0;31mFailed to install $pkg using $pkg_manager\033[0m" >&2
+        echo -e "\033[0;31mError: Failed to install \033[1m$pkg\033[0m using \033[1m$pkg_manager\033[0m" >&2
+        less "$log_file" || cat "$log_file"
+        rm -f "$log_file"
         return 1
     fi
 }
@@ -155,7 +183,7 @@ get_multi_pkg_install_managers () {
         if [[ -n "$selected_manager" ]]; then
             pkg_managers["$pkg"]="$selected_manager"
         else
-            echo "\033[0;31mInvalid package manager.\033[0m" >&2
+            echo -e "\033[0;31mError: Invalid package manager.\033[0m" >&2
         fi
     done
 
@@ -189,7 +217,7 @@ select_install_package_manager () {
                     echo "$pkg_manager"
                     return 0
                 else
-                    echo "\033[0;31mInvalid choice. Please choose a valid package manager.\033[0m" >&2
+                    echo -e "\033[0;31mError: Invalid choice. Please choose a valid package manager.\033[0m" >&2
                 fi
             done
         fi
@@ -232,6 +260,7 @@ install_package () {
     for pkg in "${packages[@]}"; do
         if is_package_installed "$pkg"; then
             echo -e "\033[1m$pkg\033[0m already installed."
+            return 1
         else
             pkg_to_install+=("$pkg")
         fi
@@ -268,7 +297,7 @@ install_package () {
                             if [[ -n "$selected_manager" ]]; then
                                 pkg_manager_map["$pkg"]="$selected_manager"
                             else
-                                echo "\033[0;31mInvalid package manager.\033[0m"
+                                echo -e "\033[0;31mError: Invalid package manager.\033[0m"
                             fi
                         done
 
@@ -280,7 +309,7 @@ install_package () {
                         break
                         ;;
                     *)
-                        echo "\033[0;31mInvalid choice. Please choose an installation method.\033[0m" >&2
+                        echo -e "\033[0;31mError: Invalid choice. Please choose an installation method.\033[0m" >&2
                         break
                         ;;
                 esac
@@ -293,12 +322,14 @@ install_package () {
                     failed_pkgs+=("${pkg_to_install[0]}")
                 fi
             else
-                echo "\033[0;31mInvalid package manager.\033[0m" >&2
+                echo -e "\033[0;31mError: Invalid package manager.\033[0m" >&2
             fi
         fi
     fi
 
-    if (( ${#failed_pkgs[@]} > 0 )); then
-        echo -e "\033[0;31mFailed to install:\033[1m ${failed_pkgs[*]} \033[0m" >&2
+    if (( ${#pkg_to_install[@]} > 1 )); then
+        if (( ${#failed_pkgs[@]} > 0 )); then
+            echo -e "\033[0;31mError: Failed to install:\033[1m ${failed_pkgs[*]} \033[0m" >&2
+        fi
     fi
 }

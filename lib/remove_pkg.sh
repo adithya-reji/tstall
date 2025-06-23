@@ -5,22 +5,18 @@ remove_package () {
     local confirm
     local failed_pkgs=()
 
-    # for pkg in "${packages[@]}"; do
-    #     if is_package_installed "$pkg"; then
-    #         if is_installed_with_tstall "$pkg"; then
-    #             pkg_to_remove+=("$pkg")
-    #         else
-    #             echo -e "The package \033[1m$pkg\033[0m was not installed using tstall. Try removing manually."
-    #             return 1
-    #         fi
-    #     else
-    #         echo -e "\033[1m$pkg\033[0m not found."
-    #         return 1
-    #     fi
-    # done
-
     for pkg in "${packages[@]}"; do
-        pkg_to_remove+=("$pkg")
+        if is_package_installed "$pkg"; then
+            if is_installed_with_tstall "$pkg"; then
+                pkg_to_remove+=("$pkg")
+            else
+                echo -e "\033[0;36mThe package \033[1m$pkg\033[0m \033[0;36mwas not installed using tstall. Try removing manually.\033[0m"
+                return 1
+            fi
+        else
+            echo -e "\033[0;31mError: \033[1m$pkg\033[0m \033[0;31mnot found.\033[0m"
+            return 1
+        fi
     done
 
     if (( ${#pkg_to_remove[@]} == 1 )); then
@@ -41,6 +37,10 @@ remove_package () {
     if [[ "$confirm" == "y" ]]; then
         for pkg in "${pkg_to_remove[@]}"; do
             pkg_manager=$(get_remove_package_manager "$pkg")
+            if [[ -z "$pkg_manager" ]]; then
+                echo -e "\033[0;31mError: No package manager found for \033[1m$pkg\033[0m."
+                continue
+            fi
             if ! try_remove_package "$pkg_manager" "$pkg"; then
                 failed_pkgs+=("$pkg")
             fi
@@ -51,6 +51,6 @@ remove_package () {
     fi
 
     if (( ${#failed_pkgs[@]} > 1 )); then
-        echo -e "\033[0;31mFailed to remove: \033[1m ${failed_pkgs[*]} \033[0m" >&2
+        echo -e "\033[0;31mError: Failed to remove: \033[1m ${failed_pkgs[*]} \033[0m" >&2
     fi
 }

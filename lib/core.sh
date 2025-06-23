@@ -1,27 +1,16 @@
 #!/usr/bin/env bash
 
 source "$SCRIPT_DIR/install_pkg.sh"
-# source lib/commands/install_pkg.sh
 source "$SCRIPT_DIR/remove_pkg.sh"
-# source lib/commands/remove_pkg.sh
 source "$SCRIPT_DIR/remove_label.sh"
-# source lib/commands/remove_label.sh
 source "$SCRIPT_DIR/remove_common.sh"
-# source lib/commands/remove_common.sh
 source "$SCRIPT_DIR/list_pkg.sh"
-# source lib/commands/list_pkg.sh
 source "$SCRIPT_DIR/list_labels.sh"
-# source lib/commands/list_labels.sh
 source "$SCRIPT_DIR/search_pkg.sh"
-# source lib/commands/search_pkg.sh
 source "$SCRIPT_DIR/search_label.sh"
-# source lib/commands/search_label.sh
 source "$SCRIPT_DIR/edit_package_label.sh"
-# source lib/commands/edit_package_label.sh
 source "$SCRIPT_DIR/rename_label.sh"
-# source lib/commands/rename_label.sh
 source "$SCRIPT_DIR/help.sh"
-# source lib/commands/help.sh
 
 main() {
     local CMD="$1"

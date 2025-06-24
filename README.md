@@ -2,7 +2,7 @@
 A minimal Linux package manager warpper which helps to group and manage packages using labels. 
 
 ## Installation
-The installation is simple. Run the following command in terminal.
+The installation is simple. Run the following commands in terminal.
 ```bash
 git clone https://github.com/adithya-reji/tstall.git
 cd tstall
@@ -12,15 +12,15 @@ chmod +x install.sh
 ## Uninstall
 To uninstall simply run
 ```bash
-./uninstall.sh
+tstall-uninstall
 ```
 ## Usage
-To run the program, specify the command and the package or the label.
+To run the program, specify the command and the package/label.
 ```bash
 tstall <command> <package/label>
 ```
 
-Basic commands
+#### Basic commands
 ```bash
 install
 remove
@@ -37,7 +37,7 @@ version
 
 * `install`:  Install package/packages on the system with the specified/available package manager and assign custom label to the installed package for easy grouping and management.
 * `remove`: Remove package/packages from the system.
-* `remove-label`: Remove all packages assigned with the label.
+* `remove-label`: Remove all packages assigned with the specified label.
 * `list`: List all the packages installed using tstall.
 * `list-labels`: List all the existing labels.
 * `search`: Search for a package installed using tstall.
@@ -52,4 +52,4 @@ version
 * `sqlite3`
 * A supported package manager: `apt`, `dnf`, `yum`, `pacman`, `zypper`
 
-> ⚠️ **Disclaimer**: This project is provided as-is without warranty. It interacts with system-level package managers — use caution and review changes before running.
+> 🔍 *Note: This tool interacts with system package managers. While it's designed to be safe, please review commands and logs before use.*

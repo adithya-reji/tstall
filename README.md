@@ -1,5 +1,5 @@
 # tstall
-A minimal Linux package manager warpper which helps to group and manage packages using labels. 
+A minimal Linux cross-distro CLI wrapper for system package managers(`apt`, `dnf`, `yum`, `pacman`, `zypper`) which helps to install, group and manage packages using labels. 
 
 ## Installation
 The installation is simple. Run the following commands in terminal.
@@ -41,7 +41,7 @@ version
 * `list`: List all the packages installed using tstall.
 * `list-labels`: List all the existing labels.
 * `search`: Search for a package installed using tstall.
-* `search-label`: List all packages assigned with the specified label.
+* `search-label`: Search for all packages assigned with the specified label.
 * `edit-package-label`: Edit the label of the specified package.
 * `rename-label`: Rename the specified label.
 * `help`: Show the help message.

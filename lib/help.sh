@@ -14,7 +14,7 @@ Basic commands:
   list                    list all installed packages.
   list-labels             list all labels.
   search                  search an installed package.
-  search-labels           search all packages with the label.
+  search-label           search all packages with the label.
   edit-package-label      edit an installed package label.
   rename-label            rename a label.
 

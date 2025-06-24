@@ -14,3 +14,4 @@ else
 fi
 
 sudo install -m 755 bin/tstall /usr/local/bin/tstall
+sudo install -m 755 uninstall.sh /usr/local/bin/tstall-uninstall

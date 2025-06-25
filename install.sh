@@ -13,5 +13,9 @@ else
     exit 1
 fi
 
+sudo mkdir -p /usr/local/share/tstall/lib
+sudo cp -r lib/* /usr/local/share/tstall/lib/
+
 sudo install -m 755 bin/tstall /usr/local/bin/tstall
 sudo install -m 755 uninstall.sh /usr/local/bin/tstall-uninstall
+echo "tstall installed successfully."

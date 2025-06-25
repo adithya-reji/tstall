@@ -1,6 +1,6 @@
 PROGRAM_NAME="tstall"
 PROGRAM_VERSION="1.0.0"
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../lib" && pwd)"
+SCRIPT_DIR="/usr/local/share/tstall/lib"
 source "$SCRIPT_DIR/constants.sh"
 source "$SCRIPT_DIR/core.sh"
 

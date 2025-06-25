@@ -6,6 +6,7 @@ read -p "This will uninstall tstall. Continue? [y/N]: " confirm
 echo "Uninstalling tstall..."
 
 sudo rm -f /usr/local/bin/tstall
+sudo rm -rf /usr/local/share/tstall
 rm -rf "$HOME/.config/tstall" "$HOME/.local/share/tstall"
 
 if [[ "$0" == "/usr/local/bin/tstall-uninstall" ]]; then
